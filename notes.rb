@@ -72,6 +72,22 @@ module Music
       return val == note.val
     end
     
+    def <(note)
+      return val < note.val
+    end
+
+    def <=(note)
+      return val <= note.val
+    end
+
+    def >(note)
+      return val > note.val
+    end
+
+    def >=(note)
+      return val >= note.val
+    end
+
     def +(integer)
       return sub(integer.abs) if integer < 0
       octave_diff = integer / 12
