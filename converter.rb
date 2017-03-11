@@ -2,20 +2,83 @@
 
 require './guitar'
 require './sheet'
-require './matrix'
+require './hungarian_solver'
 
-class Solver
-  IMPOSSIBLE = "impossible"
+class GuitarNotesSolver
 
-  def initialize(guitar, sheet)
+  def initialize(guitar)
     @guitar = guitar
-    @sheet  = sheet
+  end
 
-    preprocess()
+  def solve(notes)
+    ############################################
+    # Preprocessing
+    notes  = uniq(notes).sort{|x, y| x.val <=> y.val}
+    # Find open string notes
+    open_notes = notes.select{|note| @open_notes.key?(note.val)}
+    non_open_notes = notes.select{|note| !@open_notes.key?(note.val)}
+
+    # Note we can arbitrarily choose any note as our point of reference for spatial locality for a given string.
+    # However, notes that can utilize open strings may reduce cost but negatively affect the premise of spatial locality of note-string assignment.
+    # Therefore, use lowest note that cannot be an open string note to preserve spatial locality.
+    # With this, there is no need to choose between an open string or non-open string for a potential open string note.
+    note_offsets = notes.map{|note| note.num_steps_from(non_open_notes.first)}
+
+    # Initialize basic cost matrix
+    cost_matrix = init_cost_matrix(notes)
+
+    return [] if !AssignmentSolver::solvable?(cost_matrix)
+
+    ############################################
+    # Cost Optimization
+    # Sort by required strings' relative position from left (0) to right (length-1)
+    required_strings = req_strings(cost_matrix).sort{|x, y| x[1][:index] <=> y[1][:index]}
+
+    # For whichever of the following is leftmost, use that string as the starting point:
+    # - leftmost required string
+    # - leftmost string to meet minimum strings for input notes
+    leftmost = [required_strings.first[1][:index], @guitar.nstrings - notes.length].min
+
+    ############################################
+    # String-Note Assignment
+    solutions = []
+    while leftmost >= 0
+      lower, upper = leftmost, @guitar.nstrings
+      submatrix = (lower...uppper).map{|r|
+        cost_matrix.row(r)
+      }
+      submatrix = Matrix.new(submatrix, notes, @guitar.adjusted_tuning[lower...upper])
+      str_offsets  = @grid_offsts[lower][lower...upper]
+
+      # Compute possible assignment solution
+      solution = assign(str_offsets, note_offsets, submatrix)
+      solutions << solution if solution.length > 0
+    end
+
+    return solutions
+  end
+
+  private
+
+  def preprocess()
+    @open_notes     = {}
+    @guitar.adjusted_tuning.each_with_index{|note, i|
+      @open_notes[note.val] ||= []
+      @open_notes[note.val] << i
+    }
+    @grid_offsets   = gridify(@guitar.adjusted_tuning.sort{|x,y| x.val <=> y.val})
+    @distances      = to_hash(@grid_offsets)
+    return
+  end
+
+  def uniq(notes)
+    return notes.map{|note|
+      Music::Note::int(note.val)
+    }.uniq
   end
 
   # Determine if each note can be an open string note and whether it is possible for a given string.
-  def basic_cost_matrix(notes)
+  def init_cost_matrix(notes)
     basic_cost_matrix = @guitar.adjusted_tuning.each_with_index.to_a.map {|str_note, i|
       notes.map{|note|
         if str_note == note
@@ -31,7 +94,19 @@ class Solver
         end
       }
     }
-    return Matrix.new(basic_cost_matrix, notes, @guitar.adjusted_tuning)
+    return Matrix.new(basic_cost_matrix, @guitar.adjusted_tuning, notes)
+  end
+
+end
+
+class Solver
+  IMPOSSIBLE = "impossible"
+
+  def initialize(guitar, sheet)
+    @guitar = guitar
+    @sheet  = sheet
+
+    preprocess()
   end
 
   # Brute-force sudoku-like logic to narrow down must haves positions for certain notes.
@@ -76,68 +151,6 @@ class Solver
     return solvable
   end
 
-  # Check if a given matrix. Examine if it is impossible solely on the enum IMPOSSIBLE
-  def solvable?(matrix)
-    solvable = true
-    matrix.length.times.each{|i|
-      note_possibilities = matrix.col(i).select{|cost| cost.to_s != IMPOSSIBLE }
-      if note_possibilites.length == 0
-        solvable = false
-        break
-      end
-    }
-    return solvable
-  end
-
-  def solve(notes)
-    ############################################
-    # Preprocessing
-    notes  = uniq(notes).sort{|x, y| x.val <=> y.val}
-    # Find open string notes
-    open_notes = notes.select{|note| @open_notes.key?(note.val)}
-    non_open_notes = notes.select{|note| !@open_notes.key?(note.val)}
-
-    # Note we can arbitrarily choose any note as our point of reference for spatial locality for a given string.
-    # However, notes that can utilize open strings may reduce cost but negatively affect the premise of spatial locality of note-string assignment.
-    # Therefore, use lowest note that cannot be an open string note to preserve spatial locality.
-    # With this, there is no need to choose between an open string or non-open string for a potential open string note.
-    note_offsets = notes.map{|note| note.num_steps_from(non_open_notes.first)}
-
-    # Initialize basic cost matrix
-    cost_matrix = basic_cost_matrix(notes)
-
-    # Solve the strings thave only have 1 possible location
-    possible = solve_required!(cost_matrix)
-    return [] if !possible
-
-    ############################################
-    # Cost Optimization
-    # Sort by required strings's relative position from left (0) to right (length-1)
-    required_strings = req_strings(cost_matrix).sort{|x, y| x[1][:index] <=> y[1][:index]}
-
-    # For whichever of the following is leftmost, use that string as the starting point:
-    # - leftmost required string
-    # - leftmost string to meet minimum strings for input notes
-    leftmost = [required_strings.first[1][:index], @guitar.nstrings - notes.length].min
-
-    ############################################
-    # String-Note Assignment
-    solutions = []
-    while leftmost >= 0
-      lower, upper = leftmost, @guitar.nstrings
-      submatrix = (lower...uppper).map{|r|
-        cost_matrix.row(r)
-      }
-      submatrix = Matrix.new(submatrix, notes, @guitar.adjusted_tuning[lower...upper])
-      str_offsets  = @grid_offsts[lower][lower...upper]
-
-      # Compute possible assignment solution
-      solution = assign(str_offsets, note_offsets, submatrix)
-      solutions << solution if solution.length > 0
-    end
-
-    return solutions
-  end
   
   def assign(s_offsets, n_offsets, base_cost_matrix)
     ############################################
@@ -238,11 +251,6 @@ class Solver
 
   ############################################
   # helpers
-  def uniq(notes)
-    return notes.map{|note|
-      Music::Note::int(note.val)
-    }.uniq
-  end
 
   # Compute offsets for base notes of one string to be played by other strings.
   # Read: row->col (from string->play note offset)
@@ -283,80 +291,5 @@ class Solver
     return req
   end
 
-  def reduce_cost_matrix!(matrix)
-    adj_cost = matrix.matrix
-    reduce = lambda {|m|
-      return m.map! {|row|
-        min_e = row.select{|e| e.to_s != IMPOSSIBLE}.min
-        row.map{|e|
-          if e.to_s == IMPOSSIBLE
-            IMPOSSIBLE
-          else
-            e - min_e
-          end
-        }
-      }
-    }
-    adj_cost = reduce.call(adj_cost)
-    adj_cost = reduce.call(adj_cost.transpose).transpose
-    return
-  end
 
-  def zero_reduce!(matrix)
-    m = matrix.matrix
-    t = m.map{|row| row.map{|e| [e, false]}}
-    rows = {}
-    cols = {}
-    # Cross out zeroes on row
-    m.each_with_index{|row, r|
-      row.each_with_index{|e, c|
-        if m[r][c] == 0
-          rows[r] ||= []
-          rows[r] << c
-        end
-      }
-    }
-    # srow = rows.select{|k,v| v.length < 2}
-    rows.delete_if{|r,cols| cols.length < 2}
-    rows.keys.each {|r| t[r].map!{|e,v| [e, true]}}
-
-    # Cross out zeroes on cols
-    m.each_with_index{|row, r|
-      next if rows[r]
-      row.each_with_index{|e, c|
-        if m[r][c] == 0
-          cols[c] ||= []
-          cols[c] << r
-        end
-      }
-    }
-    t = t.transpose
-    cols.keys.each{|c| t[c].map!{|e,v| [e, true]} }
-    t = t.transpose
-
-    optimal_solution = rows.length + cols.length == m.length
-    # Not optimal solution
-    if !optimal_solution
-      e_min = nil
-      t.each{|row|
-        row.each{|e, v|
-          if !v
-            e_min ||= e
-            e_min = e if e < e_min
-          end
-        }
-      }
-      # Subtract min uncovered elemented for each uncovered row
-      t.length.times{|r|
-        next if rows[r]
-        t[r].map!{|e, v| [e-e_min, v]}
-      }
-      # Add min covered element on each covered column
-      t = t.transpose
-      cols.keys.each{|c| t[c].map!{|e,v| [e+e_min, v]}}
-      t = t.transpose
-    end
-    matrix.matrix = t.map{|row| row.map{|e,v| e}}
-    return optimal_solution
-  end
 end

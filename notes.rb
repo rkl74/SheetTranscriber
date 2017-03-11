@@ -49,15 +49,7 @@ module Music
     def self.parse(note)
       return new(note)
     end
-    
-    def val
-      return "#{@octave}#{NOTE_TO_INT[@note]}".to_i
-    end
-    
-    def name
-      return "#{@note}:#{@octave}"
-    end
-    
+        
     def num_steps_from(note)
       oct_diff  = (@val / 100) - (note.val / 100)
       note_diff = (@val % 100) - (note.val % 100)
@@ -69,30 +61,30 @@ module Music
     end
     
     def ==(note)
-      return val == note.val
+      return @val == note.val
     end
     
     def <(note)
-      return val < note.val
+      return @val < note.val
     end
 
     def <=(note)
-      return val <= note.val
+      return @val <= note.val
     end
 
     def >(note)
-      return val > note.val
+      return @val > note.val
     end
 
     def >=(note)
-      return val >= note.val
+      return @val >= note.val
     end
 
     def +(integer)
       return sub(integer.abs) if integer < 0
       octave_diff = integer / 12
       note_diff   = integer % 12
-      
+
       new_oct  = (@val / 100) + octave_diff
       new_note = (@val % 100) + note_diff
       
@@ -133,6 +125,8 @@ module Music
       @duration = duration.to_i
       @note     = note
       @octave   = octave.to_i
+      @val      = "#{@octave}#{NOTE_TO_INT[@note]}".to_i 
+      @name     = "#{@note}:#{@octave}"
       return
     end
     
