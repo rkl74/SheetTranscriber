@@ -30,5 +30,8 @@ module Music
       return pos
     end
 
+    def dup
+      return Guitar.new(@nfrets, @tuning.map{|note| note.name}, @min_octave, @max_octave)
+    end
   end
 end

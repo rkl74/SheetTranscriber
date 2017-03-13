@@ -35,21 +35,23 @@ module Music
       12 => 'Ab'
     }
     
+    class <<  self
+      def int(i)
+        note = INT_TO_NOTE[i % 100]
+        oct  = i / 100
+        as_str = [note, oct].map{|x| x.to_s}.join(';')
+        return new(as_str)
+      end
+
+      def parse(note)
+        return new(note)
+      end
+    end
+
     def initialize(note)
       parse!(note)
     end
-    
-    def self.int(i)
-      note = INT_TO_NOTE[i % 100]
-      oct  = i / 100
-      as_str = [note, oct].map{|x| x.to_s}.join(';')
-      return new(as_str)
-    end
-    
-    def self.parse(note)
-      return new(note)
-    end
-        
+
     def num_steps_from(note)
       oct_diff  = (@val / 100) - (note.val / 100)
       note_diff = (@val % 100) - (note.val % 100)
@@ -58,6 +60,10 @@ module Music
         note_diff += 12
       end
       return oct_diff * 12 + note_diff
+    end
+
+    def dup
+      return Note.new([@note, @duration].join(";"))
     end
     
     def ==(note)
@@ -130,7 +136,7 @@ module Music
       @note     = note
       @octave   = octave.to_i
       @val      = "#{@octave}#{NOTE_TO_INT[@note]}".to_i 
-      @name     = "#{@note}:#{@octave}"
+      @name     = "#{@note};#{@octave}"
       return
     end
     

@@ -2,6 +2,12 @@ module Music
   class Sheet
     attr_reader :sequence
     
+    class << self
+      def parse(sheet)
+        return new(sheet)
+      end
+    end
+
     def initialize(sheet)
       parse(sheet)
     end
@@ -9,13 +15,9 @@ module Music
     def num_beats
       return @sequence.length
     end
-    
-    def self.parse(sheet)
-      return new(sheet)
-    end
-    
+
     private
-    
+
     def parse(sheet)
       @sequence = []
       sheet.split(/\|/).each {|bt|
@@ -26,6 +28,9 @@ module Music
         }
         @sequence << beat
       }
+    end
+
+    def each_beat()
     end
     
   end

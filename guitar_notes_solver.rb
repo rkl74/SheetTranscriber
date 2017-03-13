@@ -8,7 +8,7 @@ require 'set'
 class GuitarNotesSolver
 
   def initialize(guitar)
-    @guitar = guitar
+    @guitar = guitar.dup
     setup()
   end
   
