@@ -7,8 +7,8 @@ class HungarianSolver < AssignmentSolver
   PRIMED  = :primed  # Uncovered zero
 
   def initialize(matrix)
-    @cost_matrix = matrix.deep_copy
-    @matrix_size = [matrix.nrows, matrix.ncols].max
+    @cost_matrix = self.class.normalize(matrix.deep_copy)
+    @matrix_size = @cost_matrix.nrows
 
     # Variables for solving the matrix
     unmarked = @matrix_size.times.map{
@@ -39,7 +39,8 @@ class HungarianSolver < AssignmentSolver
     @cost_matrix.dump()
   end
 
-  def run()
+  def run(labeled = false)
+    return [] if !self.class.solvable?(@cost_matrix)
     self.class.reduce_matrix!(@cost_matrix) # Step 1
     star_zeroes!() # Step 2
     step = 3
@@ -56,9 +57,16 @@ class HungarianSolver < AssignmentSolver
         step = augment_path!()
       end
     end
-    return @annotated_matrix.find(STARRED)
+    assignments =  @annotated_matrix.find(STARRED)
+    
+    if labeled
+      assignments.map!{|worker,task|
+        [@cost_matrix.rownames[worker], @cost_matrix.colnames[task]]
+      }
+    end
+    return assignments
   end
-
+  
   # Step 2: Assign as many tasks as possible.
   # Indicate this by starring an element
   # When a zero is starred, the corresponding row and column are now eliminated

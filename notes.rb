@@ -40,9 +40,9 @@ module Music
     end
     
     def self.int(i)
-      note = i % 100
+      note = INT_TO_NOTE[i % 100]
       oct  = i / 100
-      as_str = [oct, note].map{|x| x.to_s}.join(';')
+      as_str = [note, oct].map{|x| x.to_s}.join(';')
       return new(as_str)
     end
     
@@ -78,6 +78,10 @@ module Music
 
     def >=(note)
       return @val >= note.val
+    end
+
+    def <=>(note)
+      return @val <=> note.val
     end
 
     def +(integer)
@@ -117,7 +121,7 @@ module Music
     def parse!(note)
       note, octave, duration = note.split(/;/)
       raise ArgumentError, "Missing note." if note   == ""
-      raise ArgumentError, "Unrecognized note: #{@note}." if NOTE_TO_INT[note].nil?
+      raise ArgumentError, "Unrecognized note: #{note}." if NOTE_TO_INT[note].nil?
       raise ArgumentError, "Missing octave." if octave == ""
       raise ArgumentError, "Octave cannot be negative." if octave.to_i < 0
       raise ArgumentError, "Duration of note cannot be negative." if duration.to_i < 0

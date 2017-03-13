@@ -1,3 +1,9 @@
+class NilClass
+  def dup
+    self
+  end
+end
+
 class Symbol
   def dup
     self
@@ -15,9 +21,9 @@ class Matrix
 
   def initialize(matrix, rownames = [], colnames = [])
     raise ArgumentError, "Rows are not of equal length!" if matrix.map{|row| row.length}.uniq.length != 1
-    @matrix = matrix.dup
-    @colnames = colnames.dup
-    @rownames = rownames.dup
+    @matrix = matrix.map{|row| row.map{|e| e.dup}}
+    @colnames = colnames.map{|e| e.dup}
+    @rownames = rownames.map{|e| e.dup}
   end
 
   def clone()
@@ -52,12 +58,12 @@ class Matrix
   end
 
   def col(c)
-    return matrix.map{|row| row[c].nil? ? nil : row[c].dup}
+    return matrix.map{|row| row[c].dup}
   end
 
   # Deep copy to element level
   def row(r)
-    return matrix[r].map{|e| e.nil? ? nil : e.dup}
+    return matrix[r].map{|e| e.dup}
   end
 
   ##################################################
@@ -110,7 +116,7 @@ class Matrix
   end
 
   def map
-    @matrix.map{|row|
+    m = @matrix.map{|row|
       yield(row)
     }
   end
