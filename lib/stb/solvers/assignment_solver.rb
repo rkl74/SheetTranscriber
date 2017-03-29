@@ -1,4 +1,4 @@
-require './matrix'
+require 'stb/util/matrix'
 
 # workers are located on row
 # assignments are located on cols

@@ -19,8 +19,18 @@ end
 class Matrix
   attr_accessor :matrix, :colnames, :rownames
 
+  class << self
+    def create_matrix(num_rows = 1, num_cols = 1)
+      if num_rows <= 0 || num_cols <= 0
+        return Matrix.new([[]])
+      else
+        return Matrix.new(num_rows.times.map{ [nil]*num_cols })
+      end
+    end
+  end
+
   def initialize(matrix, rownames = [], colnames = [])
-    raise ArgumentError, "Rows are not of equal length!" if matrix.map{|row| row.length}.uniq.length != 1
+    raise ArgumentError, "Rows are not of equal length!" if matrix.map{|row| row.length}.uniq.length > 1
     @matrix = matrix.map{|row| row.map{|e| e.dup}}
     @colnames = colnames.map{|e| e.dup}
     @rownames = rownames.map{|e| e.dup}
@@ -84,12 +94,13 @@ class Matrix
     end
     @matrix[r] = new_row
   end
-  alias_method :set_row, :[]=
+  alias_method :set_row!, :[]=
 
   def set_col!(c, vals)
     if @matrix.length != vals.length
       raise ArgumentError, "Input column is not of equal length"
     end
+    # Add 'empty' cols
     matrix.each_with_index{|row,r|
       if c >= @matrix.first.length
         (@matrix.first.length..c).each{|c_index|

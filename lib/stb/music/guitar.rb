@@ -1,11 +1,11 @@
-require './instruments'
+require 'stb/music/instruments'
 
 module Music
   class Guitar < StringInstrument
     attr_accessor :nfrets
     attr_reader :nfrets, :capo, :tuning, :adjusted_tuning, :last_fret
     
-    def initialize(nfrets = 24, tuning = ['E;2', 'A;3', 'D;3', 'G;3', 'B;4', 'E;4'], min_oct = 2, max_oct = 6)
+    def initialize(nfrets = 24, tuning = ['E:2', 'A:3', 'D:3', 'G:3', 'B:4', 'E:4'], min_oct = 2, max_oct = 6)
       super(tuning, min_oct, max_oct)
       @nfrets = nfrets
       @capo = 0

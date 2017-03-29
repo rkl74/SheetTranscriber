@@ -1,7 +1,6 @@
 module Music
   class Note
-    attr_accessor :note, :octave, :duration
-    attr_reader :val, :name
+    attr_accessor :note, :octave
     
     NOTE_TO_INT = {
       '-'  => '00',
@@ -39,7 +38,7 @@ module Music
       def int(i)
         note = INT_TO_NOTE[i % 100]
         oct  = i / 100
-        as_str = [note, oct].map{|x| x.to_s}.join(';')
+        as_str = [note, oct].join(':')
         return new(as_str)
       end
 
@@ -53,8 +52,8 @@ module Music
     end
 
     def num_steps_from(note)
-      oct_diff  = (@val / 100) - (note.val / 100)
-      note_diff = (@val % 100) - (note.val % 100)
+      oct_diff  = (val() / 100) - (note.val() / 100)
+      note_diff = (val() % 100) - (note.val() % 100)
       if note_diff < 0
         oct_diff -= 1
         note_diff += 12
@@ -63,31 +62,31 @@ module Music
     end
 
     def dup
-      return Note.new([@note, @duration].join(";"))
+      return self.class.new(name())
     end
     
     def ==(note)
-      return @val == note.val
+      return val() == note.val()
     end
     
     def <(note)
-      return @val < note.val
+      return val() < note.val()
     end
 
     def <=(note)
-      return @val <= note.val
+      return val() <= note.val()
     end
 
     def >(note)
-      return @val > note.val
+      return val() > note.val()
     end
 
     def >=(note)
-      return @val >= note.val
+      return val() >= note.val()
     end
 
     def <=>(note)
-      return @val <=> note.val
+      return val() <=> note.val()
     end
 
     def +(integer)
@@ -95,14 +94,14 @@ module Music
       octave_diff = integer / 12
       note_diff   = integer % 12
 
-      new_oct  = (@val / 100) + octave_diff
-      new_note = (@val % 100) + note_diff
+      new_oct  = (val() / 100) + octave_diff
+      new_note = (val() % 100) + note_diff
       
       if new_note > 12
         new_note -= 12
-        new_oct += 1
+        new_oct  += 1
       end
-      return Note.new("#{INT_TO_NOTE[new_note]};#{new_oct};#{duration}")
+      return Note.new([INT_TO_NOTE[new_note], new_oct].join(':'))
     end
     alias :add :+
     
@@ -111,32 +110,36 @@ module Music
       octave_diff = integer / 12
       note_diff   = integer % 12
       
-      new_oct  = (@val / 100) - octave_diff
-      new_note = (@val % 100) - note_diff
+      new_oct  = (val() / 100) - octave_diff
+      new_note = (val() % 100) - note_diff
       
       if new_note < 0
         new_note += 12
-        new_oct -= 1
+        new_oct  -= 1
       end
-      return Note.new("#{INT_TO_NOTE[new_note]};#{new_oct};#{duration}")
+      return Note.new([INT_TO_NOTE[new_note], new_oct].join(':'))
     end
     alias :sub :-
+
+    def name()
+      return [@note, @octave].join(":")
+    end
+
+    def val()
+      return [@octave, NOTE_TO_INT[@note]].join.to_i
+    end
     
     private
     
     def parse!(note)
-      note, octave, duration = note.split(/;/)
-      raise ArgumentError, "Missing note." if note   == ""
+      note, octave = note.split(/:/)
+      raise ArgumentError, "Missing note." if note == ""
       raise ArgumentError, "Unrecognized note: #{note}." if NOTE_TO_INT[note].nil?
       raise ArgumentError, "Missing octave." if octave == ""
       raise ArgumentError, "Octave cannot be negative." if octave.to_i < 0
-      raise ArgumentError, "Duration of note cannot be negative." if duration.to_i < 0
-      
-      @duration = duration.to_i
-      @note     = note
-      @octave   = octave.to_i
-      @val      = "#{@octave}#{NOTE_TO_INT[@note]}".to_i 
-      @name     = "#{@note};#{@octave}"
+
+      @note   = note
+      @octave = octave.to_i
       return
     end
     

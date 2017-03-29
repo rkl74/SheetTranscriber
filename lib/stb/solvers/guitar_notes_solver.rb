@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
-require './guitar'
-require './sheet'
-require './hungarian_solver'
+require 'stb/music/guitar'
+require 'stb/music/sheet'
+require 'stb/solvers/hungarian_solver'
 require 'set'
 
 class GuitarNotesSolver
@@ -16,13 +16,14 @@ class GuitarNotesSolver
     ############################################
     # Preprocessing
     notes  = uniq(notes).sort
-    return [] if notes.length > @guitar.nstrings || notes.length == 0
+    return [[]] if notes.length == 0
+    raise ArgumentError, "There are more unique notes than strings!" if notes.length > @guitar.nstrings
     # Separate the notes to be solved into two categories: open notes vs non-open notes
     open_notes = notes.select{|note| @open_notes.key?(note.val)}
     non_open_notes = notes.select{|note| !@open_notes.key?(note.val)}.sort
 
     # If there are zero non-open notes, then all the notes can be played with no fingers.
-    return open_notes.map{|note| [@open_notes[note].first, 0]} if non_open_notes.length == 0
+    return [open_notes.map{|note| [note.name, 0]}] if non_open_notes.length == 0
 
     # Note we can arbitrarily choose any note as our point of reference for spatial locality for a given string.
     # However, notes that can utilize open strings may reduce cost but negatively affect the premise of spatial locality of note-string assignment.

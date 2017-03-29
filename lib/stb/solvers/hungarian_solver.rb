@@ -1,4 +1,4 @@
-require './assignment_solver'
+require 'stb/solvers/assignment_solver'
 
 class HungarianSolver < AssignmentSolver
 
