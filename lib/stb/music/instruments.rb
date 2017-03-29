@@ -1,4 +1,4 @@
-require 'stb/music/notes'
+require 'stb/music/note'
 
 module Music
   class StringInstrument
