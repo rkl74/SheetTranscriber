@@ -27,7 +27,7 @@ class SheetSolver
     compressed_display = []
     seq.each{|state|
       buffer = ['|']*@guitar.nstrings
-      state.each{|str,fret|
+      state.each{|str, fret|
         buffer[str] = fret
       }
       compressed_display << buffer.join("\t")
@@ -37,7 +37,7 @@ class SheetSolver
 
   def display_recommended()
     proposed_solution()[:path].each{|node_name, state|
-      puts @guitar.display(state.map{|str_info, fret| [str_info[1], fret]})
+      puts @guitar.display(state.map{|name, str, fret| [str, fret]})
       puts "-" * 50
     }
   end
@@ -45,7 +45,7 @@ class SheetSolver
   def display_states()
     @state_nodes.each{|states|
       displays = states.map{|node|
-        arrangement = node.val.map{|str_info, fret| [str_info[1], fret]}
+        arrangement = node.val.map{|name, str, fret| [str, fret]}
         @guitar.display(arrangement)
       }
       t = displays.map{|display| display.split(/\n/)}
@@ -135,8 +135,8 @@ class SheetSolver
   def transition_cost(cur_arrangement, nxt_arrangement)
     cur = cur_arrangement - nxt_arrangement
     nxt = nxt_arrangement - cur_arrangement
-    cur.map!{|str_info, fret| [str_info[1], fret]}
-    nxt.map!{|str_info, fret| [str_info[1], fret]}
+    cur.map!{|note, str, fret| [str, fret]}
+    nxt.map!{|note, str, fret| [str, fret]}
     
     cost = 0
     case

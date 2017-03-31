@@ -11,7 +11,10 @@ class GuitarNotesSolver
     @guitar = guitar.dup
     setup()
   end
-  
+
+  # Returns [guitar_string_name, guitar_string_index, capo_offset]
+  # FIXME: If there are two stirngs that are tuned exactly the same are both assigned a note,
+  # the solver will not guarantee a permutation of those solutions.
   def solve(notes)
     ############################################
     # Preprocessing
@@ -23,7 +26,7 @@ class GuitarNotesSolver
     non_open_notes = notes.select{|note| !@open_notes.key?(note.val)}.sort
 
     # If there are zero non-open notes, then all the notes can be played with no fingers.
-    return [open_notes.map{|note| [[note.name, @open_notes[note.val].first], 0]}] if non_open_notes.length == 0
+    return [open_notes.map{|note| [note.name, @open_notes[note.val].first, 0]}] if non_open_notes.length == 0
 
     # Note we can arbitrarily choose any note as our point of reference for spatial locality for a given string.
     # However, notes that can utilize open strings may reduce cost but negatively affect the premise of spatial locality of note-string assignment.
@@ -83,14 +86,11 @@ class GuitarNotesSolver
                              # Compute offset from capo for this string
                              base_note_offset + relative_offset
                            end
-        [[used_strings[w].name, from+w], offset_from_capo]
+        [used_strings[w].name, from+w, offset_from_capo]
       }
       solutions << solution
     }
-    
-    ############################################
-    # Reduce superset solutions
-    
+
     return solutions.to_a
   end
   
