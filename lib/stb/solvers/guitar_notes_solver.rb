@@ -23,7 +23,7 @@ class GuitarNotesSolver
     non_open_notes = notes.select{|note| !@open_notes.key?(note.val)}.sort
 
     # If there are zero non-open notes, then all the notes can be played with no fingers.
-    return [open_notes.map{|note| [note.name, 0]}] if non_open_notes.length == 0
+    return [open_notes.map{|note| [[note.name, @open_notes[note.val].first], 0]}] if non_open_notes.length == 0
 
     # Note we can arbitrarily choose any note as our point of reference for spatial locality for a given string.
     # However, notes that can utilize open strings may reduce cost but negatively affect the premise of spatial locality of note-string assignment.
@@ -49,8 +49,8 @@ class GuitarNotesSolver
       base = (from...@guitar.nstrings).map{|r|
         cost_matrix[r]
       }
-
-      # Fill in the submatrix (filling in the nil elements)
+      
+      # Fill in the nil elements of the submatrix with relative offsets
       layer = string_offsets.map{|s_offset| note_offsets.map{|n_offset| (n_offset - s_offset)}}
       layer_abs = layer.map{|row| row.map{|e| e.abs}}
 
@@ -66,10 +66,14 @@ class GuitarNotesSolver
       next if solution.length == 0
 
       # Find the offset on the string being used as a point of reference for the base_note
-      base_note_assignment = solution.select{|w,t| t == base_note_task}.first
-      base_note_offset = base_note.num_steps_from(used_strings[base_note_assignment[0]])
+      base_str, note_idx = solution.select{|w,t| t == base_note_task}.first
+      base_note_offset = base_note.num_steps_from(used_strings[base_str])
 
-      solution = solution.select{|w,t| layer[w][t] != nil}.map{|w,t|
+      # Adjust relative offsets to center around the designated base note position.
+      adjustment = layer[base_str][note_idx] * -1
+      layer.each{|row| row.map!{|e| e += adjustment}}
+
+      solution = solution.select{|w,t| layer[w][t]}.map{|w,t|
         relative_offset = layer[w][t]
         # Check if this is an open string note
         offset_from_capo = if base[w][t] == 0
@@ -79,7 +83,7 @@ class GuitarNotesSolver
                              # Compute offset from capo for this string
                              base_note_offset + relative_offset
                            end
-        [used_strings[w].name, offset_from_capo]
+        [[used_strings[w].name, from+w], offset_from_capo]
       }
       solutions << solution
     }

@@ -195,13 +195,13 @@ class HungarianSolver < AssignmentSolver
     # Add min element to each covered row
     @rows_covered.each_with_index{|status,r|
       next if !status
-      @cost_matrix[r].map!{|e| e == IMPOSSIBLE ? IMPOSSIBLE : e + e_min}
+      @cost_matrix[r].map!{|e| e + e_min}
     }
 
     # Subtract min element from each uncovered column
     @cols_covered.each_with_index{|status,c|
       next if status
-      @cost_matrix.set_col!(c, @cost_matrix.col(c).map{|e| e == IMPOSSIBLE ? IMPOSSIBLE : e - e_min})
+      @cost_matrix.set_col!(c, @cost_matrix.col(c).map{|e| e - e_min})
     }
     return 4
   end

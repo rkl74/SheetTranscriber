@@ -6,7 +6,7 @@ require 'stb/util/matrix'
 class AssignmentSolver
   WORKERS_ERR = "Not enough workers for the amounts of tasks to be assigned."
 
-  IMPOSSIBLE = :impossible
+  IMPOSSIBLE = Float::INFINITY
 
   class << self
     def normalize(cost_matrix)
@@ -56,7 +56,7 @@ class AssignmentSolver
     def reduce_rows!(cost_matrix)
       cost_matrix.map!{|row|
         min_e = row.select{|e| e != IMPOSSIBLE && !e.nil?}.min
-        row.map{|e| e == IMPOSSIBLE || e.nil? ? e : e-min_e}
+        row.map{|e| e.nil? ? nil : e-min_e}
       }
     end
     

@@ -1,3 +1,4 @@
 source 'https://rubygems.org'
 
-gem 'stb', :require=>false
+gem 'stb', :require=>false, :path => File.expand_path('./')
+gem 'byebug', :require=>false

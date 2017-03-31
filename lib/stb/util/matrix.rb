@@ -16,6 +16,12 @@ class Integer
   end
 end
 
+class Float
+  def dup
+    self
+  end
+end
+
 class Matrix
   attr_accessor :matrix, :colnames, :rownames
 

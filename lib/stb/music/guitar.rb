@@ -33,5 +33,15 @@ module Music
     def dup
       return Guitar.new(@nfrets, @tuning.map{|note| note.name}, @min_octave, @max_octave)
     end
+
+    def display(positions)
+      d = tuning.length.times.map{|i| [@adjusted_tuning[i].name, "|" + "-"*(nfrets-capo)]}
+      positions.each{|str,fret|
+          d[str][1][fret] = "X"
+      }
+      d.map!{|r| r.join("\t")}
+      d.reverse.join("\n")
+    end
+
   end
 end
