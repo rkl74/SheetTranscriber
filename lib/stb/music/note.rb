@@ -140,6 +140,11 @@ module Music
 
       @note   = note
       @octave = octave.to_i
+
+      # Rest note
+      if @note == '-'
+        @octave = 0
+      end
       return
     end
     

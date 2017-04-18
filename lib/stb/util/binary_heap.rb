@@ -53,12 +53,10 @@ class BinaryHeap
     @heap.pop
     
     parent = 0
-
     # percholate down
     loop do
       children = @heap[parent*2+1..(parent+1)*2].to_a
       break if children.length == 0
-
       idx = parent*2+1
       unless children.length == 1
         case @type
@@ -70,7 +68,9 @@ class BinaryHeap
           break if @heap[parent] >= @heap[idx]
         end
       end
-      @heap[parent], @heap[idx] = @heap[idx], @heap[parent]
+      if compare(@heap[parent], @heap[idx])
+        @heap[parent], @heap[idx] = @heap[idx], @heap[parent]
+      end
       parent = idx
     end
     return t
