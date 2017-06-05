@@ -1,0 +1,6 @@
+require 'stb/music/guitar'
+require 'stb/music/instruments'
+require 'stb/music/mxml_sheet'
+require 'stb/music/note'
+require 'stb/music/sheet'
+require 'stb/solvers/sheet_solver'

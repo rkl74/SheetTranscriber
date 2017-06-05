@@ -1,11 +1,9 @@
 #!/usr/bin/env ruby
 
 require 'bundler/setup'
-require 'stb'
+require 'stb/music/mxml_sheet'
 
 data = File.open(File.expand_path(ARGV.shift)).read
-guitar = Music::Guitar.new
 sheet = Music::MxmlSheet::parse!(data)
-solver = SheetSolver.new(sheet, guitar)
+puts sheet.to_s
 
-solver.display_recommended

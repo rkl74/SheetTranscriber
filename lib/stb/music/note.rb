@@ -18,8 +18,10 @@ module Music
       'G#' => '12', 'Ab' => '12'
     }
     
+    REST_NOTE = '-'
+
     INT_TO_NOTE = {
-      0  => '-',
+      0  =>  REST_NOTE,
       1  => 'A',
       2  => 'Bb',
       3  => 'B',
@@ -124,11 +126,16 @@ module Music
     def name()
       return [@note, @octave].join(":")
     end
+    alias :to_s :name
 
     def val()
       return [@octave, NOTE_TO_INT[@note]].join.to_i
     end
     
+    def is_rest?()
+      return @note == REST_NOTE
+    end
+
     private
     
     def parse!(note)

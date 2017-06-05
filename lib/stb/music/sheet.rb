@@ -10,6 +10,12 @@ module Music
       @duration = duration
     end
 
+    def name()
+      [@note, @octave, @duration].join(":")
+
+    end
+    alias :to_s :name
+
     def dup()
       return self.class.new(name(), @duration)
     end
@@ -17,7 +23,7 @@ module Music
   end
 
   class Sheet
-    attr_reader :sequence
+    attr_accessor :sequence
     
     class << self
       def parse(sheet)
@@ -48,6 +54,14 @@ module Music
         # Dup to prevent changes of block being yielded to
         yield(active.map{|note| note.dup})
       }
+    end
+
+    def to_s()
+      @sequence.map{|notes|
+        notes.map{|note|
+          note.to_s
+        }.join(",")
+      }.join("|")
     end
 
     private

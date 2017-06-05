@@ -18,7 +18,7 @@ class GuitarNotesSolver
   def solve(notes)
     ############################################
     # Preprocessing
-    notes  = uniq(notes).sort
+    notes = uniq(notes).sort.select{|n| !n.is_rest?}
     return [[]] if notes.length == 0
     raise ArgumentError, "There are more unique notes than strings!" if notes.length > @guitar.nstrings
     # Separate the notes to be solved into two categories: open notes vs non-open notes
@@ -39,7 +39,10 @@ class GuitarNotesSolver
     # Initialize basic cost matrix
     cost_matrix = init_cost_matrix(notes)
 
-    return [] if !AssignmentSolver::solvable?(cost_matrix)
+    if !AssignmentSolver::solvable?(cost_matrix)
+      warn [notes.join(","), "is unsolvable"].join(" ")
+      return []
+    end
     
     ############################################
     # String-Note Optimal Assignment
