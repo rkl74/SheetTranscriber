@@ -42,6 +42,42 @@ class SheetSolver
     }
   end
 
+  # FIXME: 1. Take into account the change in key signatures.
+  # 2. Separate the change into another sequential state display
+  # 3. Partition into readable windows so it's not just a really long line.
+  # 4. Provide an uncompressed version for realtime/beat tracking.
+  def display_sequential_states()
+    guitar_strings = []
+    path = proposed_solution()[:path]
+    @guitar.nstrings.times{ guitar_strings << [nil]  * path.length}
+    path.each_with_index{|info, i|
+      node_name, states = info
+      states.each{|name, str, fret|
+        guitar_strings[str][i] = fret.to_s
+      }
+    }
+    path.length.times{|i|
+      longest_str = guitar_strings.map{|str| str[i].to_s.length}.max
+      guitar_strings.each{|str|
+        tmp = '-' * (longest_str+1)
+        tmp[0...str[i].to_s.length] = str[i].to_s
+        str[i] = tmp
+      }
+    }
+    guitar_strings.map!{|arr|
+      arr.each_slice(50).to_a
+    }
+    guitar_strings.first.length.times{|i|
+      longest_str = guitar_strings.first.map{|row| row.join.length}.max
+      guitar_strings.each{|str|
+        tmp = '-' * longest_str
+        tmp[0...str[i].join.length] = str[i].join
+        puts tmp
+      }
+      puts
+    }
+  end
+
   def display_states()
     @state_nodes.each{|states|
       displays = states.map{|node|

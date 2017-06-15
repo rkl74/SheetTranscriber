@@ -8,4 +8,5 @@ guitar = Music::Guitar.new
 sheet = Music::MxmlSheet::parse!(data)
 solver = SheetSolver.new(sheet, guitar)
 
-solver.display_recommended
+#solver.display_recommended
+solver.display_sequential_states
